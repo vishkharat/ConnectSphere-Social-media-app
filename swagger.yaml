@@ -1,0 +1,356 @@
+openapi: 3.0.0
+info:
+  title: ConnectSphere API
+  description: API documentation for ConnectSphere application
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+components:
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8c"
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          example: "johndoe@example.com"
+        profilePicture:
+          type: string
+          example: "http://example.com/profile.jpg"
+        bio:
+          type: string
+          example: "Hello, I'm John Doe."
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8b"
+        user:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8c"
+        content:
+          type: string
+          example: "This is a post content."
+        likes:
+          type: array
+          items:
+            type: string
+          example: ["60d5f4f8e4e1c2d12f2a4a8c"]
+        comments:
+          type: array
+          items:
+            type: string
+          example: ["60d5f4f8e4e1c2d12f2a4a8d"]
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8d"
+        post:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8b"
+        user:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8c"
+        content:
+          type: string
+          example: "This is a comment."
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-08-19T12:34:56Z"
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8e"
+        sender:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8c"
+        receiver:
+          type: string
+          example: "60d5f4f8e4e1c2d12f2a4a8b"
+        content:
+          type: string
+          example: "Hello, this is a message."
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-08-19T12:34:56Z"
+
+  parameters:
+    UserIdParam:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    PostIdParam:
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    ReceiverIdParam:
+      name: receiverId
+      in: path
+      required: true
+      schema:
+        type: string
+
+paths:
+  /auth/login:
+    post:
+      summary: Login user and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  userId:
+                    type: string
+        "400":
+          description: Invalid email or password
+        "500":
+          description: Login failed
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: User registered successfully
+        "500":
+          description: Registration failed
+
+  /profiles/{userId}:
+    get:
+      summary: Get user profile
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      responses:
+        "200":
+          description: Successfully fetched user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+        "500":
+          description: Failed to fetch profile
+
+    put:
+      summary: Update user profile
+      parameters:
+        - $ref: "#/components/parameters/UserIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profilePicture:
+                  type: string
+                bio:
+                  type: string
+      responses:
+        "200":
+          description: Profile updated successfully
+        "400":
+          description: Invalid data
+        "404":
+          description: User not found
+        "500":
+          description: Failed to update profile
+      security:
+        - JWT: []
+
+  /posts:
+    post:
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        "201":
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "500":
+          description: Failed to create post
+      security:
+        - JWT: []
+
+  /posts/{postId}:
+    get:
+      summary: Get a post with comments
+      parameters:
+        - $ref: "#/components/parameters/PostIdParam"
+      responses:
+        "200":
+          description: Successfully fetched post with comments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: Post not found
+        "500":
+          description: Failed to fetch post
+
+  /posts/like/{postId}:
+    post:
+      summary: Like or unlike a post
+      parameters:
+        - $ref: "#/components/parameters/PostIdParam"
+      responses:
+        "200":
+          description: Successfully liked or unliked the post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: Post not found
+        "500":
+          description: Failed to like post
+      security:
+        - JWT: []
+
+  /posts/comment/{postId}:
+    post:
+      summary: Add a comment to a post
+      parameters:
+        - $ref: "#/components/parameters/PostIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        "201":
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Missing content
+        "404":
+          description: Post not found
+        "500":
+          description: Failed to add comment
+      security:
+        - JWT: []
+
+  /messages/send:
+    post:
+      summary: Send a message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                receiverId:
+                  type: string
+                content:
+                  type: string
+      responses:
+        "201":
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "500":
+          description: Failed to send message
+      security:
+        - JWT: []
+
+  /messages/{receiverId}:
+    get:
+      summary: Get messages between users
+      parameters:
+        - $ref: "#/components/parameters/ReceiverIdParam"
+      responses:
+        "200":
+          description: Successfully fetched messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+        "404":
+          description: No messages found
+        "500":
+          description: Failed to get messages
+      security:
+        - JWT: []
