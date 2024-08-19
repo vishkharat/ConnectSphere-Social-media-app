@@ -1,5 +1,5 @@
 const express = require('express');
-//const path = require('path'); // Required for setting the views directory
+const path = require('path'); // Required for setting the views directory
 
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
